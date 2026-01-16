@@ -2,23 +2,27 @@ from django.db import models
 
 
 class JoliboxConfig(models.Model):
-    """Configuration model for storing Jolibox API credentials."""
+    """Singleton configuration model for storing Jolibox API credentials."""
     
-    name = models.CharField(max_length=100, help_text="Config identifier (e.g., 'Production', 'Test')")
-    joli_source_token = models.TextField(help_text="Jolibox API source token")
-    device_id = models.CharField(max_length=255, help_text="Device identifier")
-    is_active = models.BooleanField(default=True, help_text="Only active config will be used")
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    joli_source_token = models.TextField(help_text="Jolibox API source token", blank=True, default="")
+    device_id = models.CharField(max_length=255, help_text="Device identifier", blank=True, default="")
 
     class Meta:
         verbose_name = "Jolibox Configuration"
-        verbose_name_plural = "Jolibox Configurations"
+        verbose_name_plural = "Jolibox Configuration"
 
     def __str__(self):
-        return f"{self.name} ({'Active' if self.is_active else 'Inactive'})"
+        return "API Configuration"
+
+    def save(self, *args, **kwargs):
+        """Ensure only one record exists."""
+        if not self.pk and JoliboxConfig.objects.exists():
+            existing = JoliboxConfig.objects.first()
+            self.pk = existing.pk
+        super().save(*args, **kwargs)
 
     @classmethod
-    def get_active_config(cls):
-        """Get the first active configuration."""
-        return cls.objects.filter(is_active=True).first()
+    def get_config(cls):
+        """Get or create the single configuration."""
+        config, _ = cls.objects.get_or_create(pk=1)
+        return config

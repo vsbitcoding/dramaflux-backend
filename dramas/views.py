@@ -12,15 +12,13 @@ class DramaListView(APIView):
         Get list of dramas.
         
         Query params:
-        - page: Page number (default: 1)
-        - page_size: Items per page (default: 50)
+        - limit: Max items to return (default: 2000)
         """
-        page = int(request.query_params.get('page', 1))
-        page_size = int(request.query_params.get('page_size', 50))
+        limit = int(request.query_params.get('limit', 2000))
         
         try:
             service = JoliboxService()
-            result = service.get_dramas(page=page, page_size=page_size)
+            result = service.get_dramas(limit=limit)
             return Response(result)
         except ValueError as e:
             return Response(
@@ -33,10 +31,17 @@ class DramaDetailView(APIView):
     """API view to get drama details."""
     
     def get(self, request, drama_id):
-        """Get details for a specific drama."""
+        """
+        Get details for a specific drama.
+        
+        Query params:
+        - episode_num: Episode number to get details for (default: 1)
+        """
+        episode_num = int(request.query_params.get('episode_num', 1))
+        
         try:
             service = JoliboxService()
-            result = service.get_drama_detail(drama_id)
+            result = service.get_drama_detail(drama_id, episode_num=episode_num)
             return Response(result)
         except ValueError as e:
             return Response(
@@ -57,5 +62,28 @@ class EpisodeListView(APIView):
         except ValueError as e:
             return Response(
                 {"code": "ERROR", "message": str(e), "data": []},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+class UnlockEpisodeView(APIView):
+    """API view to unlock an episode."""
+    
+    def get(self, request, drama_id, episode_num):
+        """
+        Unlock a specific episode.
+        
+        Query params:
+        - session_id: Session identifier (default: auto-generated)
+        """
+        session_id = request.query_params.get('session_id', 'dramaflux')
+        
+        try:
+            service = JoliboxService()
+            result = service.unlock_episode(drama_id, int(episode_num), session_id)
+            return Response(result)
+        except ValueError as e:
+            return Response(
+                {"code": "ERROR", "message": str(e), "data": None},
                 status=status.HTTP_400_BAD_REQUEST
             )

@@ -4,19 +4,16 @@ from .models import JoliboxConfig
 
 @admin.register(JoliboxConfig)
 class JoliboxConfigAdmin(admin.ModelAdmin):
-    list_display = ('name', 'device_id', 'is_active', 'created_at', 'updated_at')
-    list_filter = ('is_active',)
-    search_fields = ('name', 'device_id')
-    readonly_fields = ('created_at', 'updated_at')
-    fieldsets = (
-        ('Configuration', {
-            'fields': ('name', 'is_active')
-        }),
-        ('API Credentials', {
-            'fields': ('joli_source_token', 'device_id')
-        }),
-        ('Timestamps', {
-            'fields': ('created_at', 'updated_at'),
-            'classes': ('collapse',)
-        }),
-    )
+    list_display = ('id', 'joli_source_token', 'device_id')
+    list_editable = ('joli_source_token', 'device_id')
+    list_display_links = None
+
+    def has_add_permission(self, request):
+        """Disable add - only one record allowed."""
+        if not JoliboxConfig.objects.exists():
+            JoliboxConfig.objects.create()  # Auto-create single record
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        """Disable delete - always keep one record."""
+        return False
