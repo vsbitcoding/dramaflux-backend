@@ -308,15 +308,41 @@ class CachedEpisodePlayView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
         
-        if not episode.is_unlocked or not episode.video_url:
+        if not episode.is_unlocked:
             return Response({
                 "code": "ERROR",
-                "message": "Episode not unlocked or video URL not available",
+                "message": "Episode not unlocked locally",
                 "data": {
-                    "isUnlocked": episode.is_unlocked,
-                    "error": episode.unlock_error,
+                    "isUnlocked": False,
+                    "error": "Episode must be unlocked via sync first"
                 }
             }, status=status.HTTP_404_NOT_FOUND)
+
+        # ---------------------------------------------------------
+        # CRITICAL FIX: Fetch FRESH video URL from Upstream
+        # The stored video_url has a token that expires quickly.
+        # We must get a new token/url every time the user plays.
+        # ---------------------------------------------------------
+        try:
+            service = JoliboxService()
+            # Fetch fresh details from upstream
+            detail = service.get_drama_detail(drama_id, episode_num=episode_num)
+            
+            if detail.get('code') == 'SUCCESS':
+                play_info = detail.get('data', {}).get('playInfo', {})
+                fresh_video_url = play_info.get('episodeM3u8')
+                
+                if fresh_video_url:
+                    # Update our DB with the fresh URL (optional, but good for debugging)
+                    episode.video_url = fresh_video_url
+                    episode.save()
+                else:
+                    # Fallback to stored if upstream fails to give URL (unlikely if unlocked)
+                     pass
+        except Exception as e:
+            # If upstream fetch fails, fall back to stored URL (it might still work if recent)
+            print(f"Failed to refresh video URL: {e}")
+
         
         # Build proxied URL for CORS handling
         # Use root-relative path to avoid Host header issues
@@ -330,7 +356,7 @@ class CachedEpisodePlayView(APIView):
                 "dramaId": drama_id,
                 "dramaName": episode.drama.name,
                 "episodeNumber": episode.episode_number,
-                "videoUrl": episode.video_url,
+                "videoUrl": episode.video_url, # This is now the FRESH url
                 "proxiedUrl": proxied_url,
                 "lastSynced": episode.last_synced.isoformat() if episode.last_synced else None,
             }
