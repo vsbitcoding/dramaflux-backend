@@ -1,0 +1,40 @@
+# DramaFlux Backend - Port 8001
+server {
+    listen 8001;
+    server_name _;
+
+    location = /favicon.ico { access_log off; log_not_found off; }
+
+    location /static/ {
+        alias /home/ubuntu/dramaflux/dramaflux-backend/staticfiles/;
+    }
+
+    location / {
+        include proxy_params;
+        proxy_pass http://unix:/home/ubuntu/dramaflux/dramaflux-backend/dramaflux.sock;
+    }
+}
+
+# DramaFlux Frontend - Port 3001
+server {
+    listen 3001;
+    server_name _;
+
+    location /api/ {
+        proxy_pass http://127.0.0.1:8001/api/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+
+    location / {
+        proxy_pass http://127.0.0.1:3002;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}

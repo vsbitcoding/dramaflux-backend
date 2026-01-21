@@ -1,0 +1,8 @@
+[Unit]
+Description=DramaFlux Backend Gunicorn Socket
+
+[Socket]
+ListenStream=/home/ubuntu/dramaflux/dramaflux-backend/dramaflux.sock
+
+[Install]
+WantedBy=sockets.target
