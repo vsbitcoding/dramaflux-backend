@@ -9,4 +9,5 @@ urlpatterns = [
     path('', RedirectView.as_view(url='/admin/', permanent=False)),
     path('admin/', admin.site.urls),
     path('api/', include('dramas.urls')),
+    path('api/ads/', include('ads.urls')),
 ]
