@@ -16,7 +16,10 @@ class ActiveAdsView(APIView):
                 'id': ad.id,
                 'code': ad.code,
                 'sequence': ad.sequence,
-                'type': ad.ad_type
+                'type': ad.ad_type,
+                'show_random': ad.show_random,
+                'random_min': ad.random_min,
+                'random_max': ad.random_max
             }
             if ad.ad_type in data:
                 data[ad.ad_type].append(ad_data)
