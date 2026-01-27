@@ -4,6 +4,7 @@ class AdConfig(models.Model):
     AD_TYPES = [
         ('HOME_FEED', 'Home Feed'),
         ('DRAMA_PLAYER', 'Drama Player'),
+        ('BETWEEN_ROWS', 'Between Rows'),
     ]
 
     name = models.CharField(max_length=100, help_text="Internal name for the ad configuration")

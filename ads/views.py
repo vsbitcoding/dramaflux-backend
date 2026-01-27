@@ -8,7 +8,8 @@ class ActiveAdsView(APIView):
         
         data = {
             'HOME_FEED': [],
-            'DRAMA_PLAYER': []
+            'DRAMA_PLAYER': [],
+            'BETWEEN_ROWS': []
         }
         
         for ad in active_ads:
